@@ -191,24 +191,12 @@ var MRTOK = MRTOK || {
             });
             
             // Try to figure out line based on colour mentioned
-            if(str.indexOf('red ') > -1) {
-                tags.push('nsl');
-            }
-            if(str.indexOf('green ') > -1) {
-                tags.push('ewl');
-            }
-            if(str.indexOf('blue ') > -1) {
-                tags.push('dtl');
-            }
-            if(str.indexOf('yellow ') > -1) {
-                tags.push('ccl');
-            }
-            if(str.indexOf('purple ') > -1) {
-                tags.push('nel');
-            }
-            if(str.indexOf('brown ') > -1) {
-                tags.push('tel');
-            }
+            if(str.indexOf('red ') > -1) tags.push('nsl');
+            if(str.indexOf('green ') > -1) tags.push('ewl');
+            if(str.indexOf('blue ') > -1) tags.push('dtl');
+            if(str.indexOf('yellow ') > -1) tags.push('ccl');
+            if(str.indexOf('purple ') > -1) tags.push('nel');
+            if(str.indexOf('brown ') > -1) tags.push('tel');
             
             // Duplicates? Most likely the stations affected are on the same line
             // https://stackoverflow.com/a/35922651/584192
@@ -302,6 +290,7 @@ var MRTOK = MRTOK || {
                 .replace(/\bi(m|ll)\b/gi, 'I\'$1')
                 .replace(/\bi('(m|ll))?\b/gi, 'I$1')
                 .replace(/\babt\b/gi, 'about')
+                .replace(/\bytd\b/gi, 'yesterday')
                 .replace(/\btmr\b/gi, 'tomorrow')
                 .replace(/\bpk\b/gi, 'Park')
                 .replace(/\bu\b/gi, 'you')
@@ -320,7 +309,7 @@ var MRTOK = MRTOK || {
             return str
                 .replace(/^\s?@[^\s]+\b/g, '') // @ mentions in front
                 .replace(/#\w+\s?/g, '') // all # tags
-                .replace(/As reported on FB[.,\s]+/i, '') // As reported on FB.
+                .replace(/As (reported|posted|seen) on (FB|facebook)[.,\s]+/i, '') // As reported on FB.
                 .replace(/\b(?:https?|ftp):\/\/[\n\S]+\b/gi, '') // urls
                 .replace(/\b(shit|fu?c?k(ed|ing)?|cc?b|chee\sb(ye|ai)|lj|smlj|nabei|nb|wtf)/gi, '****') // profanities
                 .replace(/([\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2694-\u2697]|\uD83E[\uDD10-\uDD5D])/g, '') // emojis
@@ -332,12 +321,12 @@ var MRTOK = MRTOK || {
                 .replace(/\s*#/g, ' #') // spaces before hashtags
                 .replace(/\s+/g, ' ') // multiple spaces
                 .replace(/\s?[!?.]+\s?/g, '. ').replace(/[.]\s[.]/g, '. ') // excessive punctuation
-                .replace(/^[:.,\s]+/, '') // trim spaces and punctuation at the front
-                .replace(/[:.,\s]+$/, '') // trim spaces and punctuation at the end
+                .replace(/^["':.,\s]+/, '') // trim spaces and punctuation at the front
+                .replace(/["':.,\s]+$/, '') // trim spaces and punctuation at the end
                 .replace(/\b(\d+)\.\s(\d+)/, '$1:$2') // incorrect period usage for time
                 .replace(/\bs?mrt/gi, UC) // SMRT
                 .replace(/\blrt\b/gi, UC) // LRT
-                .replace(/(\d+)min(s)?\b/gi, '$1 min$2') // space between num and mins
+                .replace(/(\d+)\s?min?(s)?\b/gi, '$1 min$2') // space between num and mins
                 .replace(/(^.|\.\s*.)/g, UC); // Sentence case
         },
         
