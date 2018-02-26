@@ -7,7 +7,7 @@
  * @link     https://github.com/samliew/mrtok
  */
 
-/* global Image, location, jQuery, $, moment */
+/* global Image, location, jQuery, $, moment, navigator */
 
 // Check jQuery dependancy
 if(typeof jQuery === 'undefined') console.error('MRTOK.Main - jQuery not found');
@@ -68,7 +68,7 @@ var MRTOK = MRTOK || {
         'SingaporeNewsSG','sgpressrelease','CoconutsSG','sgpElections',
         'singaporeinform','majulahreport',
         // Re-posters or ranters
-        
+        'websterlkc',
     ],
     
     // Reasons why a post would fail validation
@@ -167,7 +167,7 @@ var MRTOK = MRTOK || {
                 'eve\\b','holiday','any update','is the','thanks? for',
                 'causes','I\'m at','posted from','yahoo','ChannelNewsAsia',
                 'any (train )?delay','delay(ed)?\\?$','yesterday','ytd',
-                'i hope','hopefully','heng','hope no',
+                'i hope','hopefully','heng','hope no','diverted','back to normal',
                 //'cleared','resumed',
             ];
             return str.match(new RegExp('(' + bannedKeywords.join('|') + ')', 'i')) !== null;
@@ -191,12 +191,12 @@ var MRTOK = MRTOK || {
             });
             
             // Try to figure out line based on colour mentioned
-            if(str.indexOf('red ') > -1) tags.push('nsl');
-            if(str.indexOf('green ') > -1) tags.push('ewl');
-            if(str.indexOf('blue ') > -1) tags.push('dtl');
-            if(str.indexOf('yellow ') > -1) tags.push('ccl');
-            if(str.indexOf('purple ') > -1) tags.push('nel');
-            if(str.indexOf('brown ') > -1) tags.push('tel');
+            if(str.match(/\bred\b/gi)) tags.push('nsl');
+            if(str.match(/\bgreen\b/gi)) tags.push('ewl');
+            if(str.match(/\bblue\b/gi)) tags.push('dtl');
+            if(str.match(/\byellow\b/gi)) tags.push('ccl');
+            if(str.match(/\bpurple\b/gi)) tags.push('nel');
+            if(str.match(/\bbrown\b/gi)) tags.push('tel');
             
             // Duplicates? Most likely the stations affected are on the same line
             // https://stackoverflow.com/a/35922651/584192
@@ -273,7 +273,7 @@ var MRTOK = MRTOK || {
                 var stations = MRTOK.lineStationsMap[lineCode];
                 for (var station of stations) {
                     var regstr = station.replace(/\s/g, '\\\s?');
-                    str = str.replace(new RegExp('#?' + regstr, 'gi'), station);
+                    str = str.replace(new RegExp('#?' + regstr, 'gi'), '<span data-station>'+station+'</span>');
                 }
             });
             return str;
@@ -282,11 +282,14 @@ var MRTOK = MRTOK || {
         humanizeText: function(str) {
             return str
                 .replace(/\b(B|b)e?twn\b/gi, '$1etween')
+                .replace(/in between/gi, 'in-between')
                 .replace(/\b(A|a)vail\b/gi, '$1vailable')
+                .replace(/\b(A|a)dd'?l\b/gi, '$1dditional')
                 .replace(/\b(P|p)ls\b/gi, '$1lease')
                 .replace(/\b(S|s)vc/gi, '$1ervice')
                 .replace(/\b(S|s)tn/gi, '$1tation')
                 .replace(/\bprob\b/g, 'problem')
+                .replace(/\btwds\b/g, 'towards')
                 .replace(/\bi(m|ll)\b/gi, 'I\'$1')
                 .replace(/\bi('(m|ll))?\b/gi, 'I$1')
                 .replace(/\babt\b/gi, 'about')
@@ -296,6 +299,7 @@ var MRTOK = MRTOK || {
                 .replace(/\bu\b/gi, 'you')
                 .replace(/\br\b/gi, 'are')
                 .replace(/\bn\b/gi, 'and')
+                .replace(/\ba(bit|lot)\b/gi, 'a $1')
                 .replace(/\bmth\b/gi, 'month')
                 .replace(/\s@\s/g, ' at ');
         },
@@ -307,9 +311,9 @@ var MRTOK = MRTOK || {
             str = MRTOK.helpers.capitalizeLinesAndStations(str);
             str = MRTOK.helpers.humanizeText(str);
             return str
-                .replace(/^\s?@[^\s]+\b/g, '') // @ mentions in front
-                .replace(/#\w+\s?/g, '') // all # tags
-                .replace(/As (reported|posted|seen) on (FB|facebook)[.,\s]+/i, '') // As reported on FB.
+                .replace(/\s?(@[^\s]+\s*)+\b/g, '') // @ mentions
+                .replace(/#\w+\b/g, '') // all # tags 
+                .replace(/As (reported|posted|seen) on (FB|facebook)[.,\s]+/i, '')
                 .replace(/\b(?:https?|ftp):\/\/[\n\S]+\b/gi, '') // urls
                 .replace(/\b(shit|fu?c?k(ed|ing)?|cc?b|chee\sb(ye|ai)|lj|smlj|nabei|nb|wtf)/gi, '****') // profanities
                 .replace(/([\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2694-\u2697]|\uD83E[\uDD10-\uDD5D])/g, '') // emojis
@@ -321,8 +325,8 @@ var MRTOK = MRTOK || {
                 .replace(/\s*#/g, ' #') // spaces before hashtags
                 .replace(/\s+/g, ' ') // multiple spaces
                 .replace(/\s?[!?.]+\s?/g, '. ').replace(/[.]\s[.]/g, '. ') // excessive punctuation
-                .replace(/^["':.,\s]+/, '') // trim spaces and punctuation at the front
-                .replace(/["':.,\s]+$/, '') // trim spaces and punctuation at the end
+                .replace(/^[“”"':.,\s]+/, '') // trim spaces and punctuation at the front
+                .replace(/[“”"':.,\s]+$/, '') // trim spaces and punctuation at the end
                 .replace(/\b(\d+)\.\s(\d+)/, '$1:$2') // incorrect period usage for time
                 .replace(/\bs?mrt/gi, UC) // SMRT
                 .replace(/\blrt\b/gi, UC) // LRT
@@ -349,6 +353,16 @@ var MRTOK = MRTOK || {
 				buf.unshift(['&#', str[i].charCodeAt(), ';'].join(''));
 			}
 			return buf.join('');
+		},
+		
+		// Function to temporary inject custom CSS
+		injectCss: function() {
+		    $('<style type="text/css">').html("\
+                [data-station] {\
+                    font-weight: 600;\
+                    color: #e00;\
+                }")
+                .appendTo("head");
 		},
     },
     
@@ -761,6 +775,7 @@ var MRTOK = MRTOK || {
         }
         
         // Init functionality
+        this.helpers.injectCss();
         this.displayNews();
         this.handleErrors();
         
