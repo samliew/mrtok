@@ -166,6 +166,7 @@ var MRTOK = MRTOK || {
                 'causes','I\'m at','posted from','yahoo','ChannelNewsAsia',
                 'any (train )?delay','delay(ed)?\\?$','yesterday','ytd',
                 'i hope','hopefully','heng','hope no','diverted','back to normal',
+                'skip \\w+ bus stop','operating as usual',
                 //'cleared','resumed',
             ];
             return str.match(new RegExp('(' + bannedKeywords.join('|') + ')', 'i')) !== null;
@@ -260,8 +261,9 @@ var MRTOK = MRTOK || {
                 .replace(/#?CCK\b/gi, 'Choa Chu Kang')
                 .replace(/#?TPY\b/gi, 'Toa Payoh')
                 .replace(/#?JE\b/gi, 'Jurong East')
-                .replace(/\bbt\.?\sp/gi, 'Bukit P')
-                .replace(/\bbt\.?\sb/gi, 'Bukit B');
+                .replace(/\bbk?t\.?\sp/gi, 'Bukit P')
+                .replace(/\bpjg/gi, 'Panjang')
+                .replace(/\bbk?t\.?\sb/gi, 'Bukit B');
             
             Object.keys(MRTOK.lineStationsMap).forEach(function(lineCode) {
                 // Capitalize line code
