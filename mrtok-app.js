@@ -269,11 +269,11 @@ var MRTOK = MRTOK || {
                 // Capitalize line code
                 str = str.replace(new RegExp('\\b' + lineCode + '\\b', 'gi'), lineCode.toUpperCase());
                 
-                // Capitalize station names
+                // Capitalize station names, and wrap with station tag
                 var stations = MRTOK.lineStationsMap[lineCode];
                 for (var station of stations) {
                     var regstr = station.replace(/\s/g, '\\\s?');
-                    str = str.replace(new RegExp('#?' + regstr, 'gi'), '<span data-station>'+station+'</span>');
+                    str = str.replace(new RegExp('(?<!\>)#?' + regstr, 'gi'), '<span data-station>'+station+'</span>');
                 }
             });
             return str;
