@@ -66,7 +66,7 @@ var MRTOK = MRTOK || {
         // Bots
         'sgtastemakers','SG_Alerts','KopitiamBot','SG_CommComm','SGnews',
         'SingaporeNewsSG','sgpressrelease','CoconutsSG','sgpElections',
-        'singaporeinform','majulahreport',
+        'singaporeinform','majulahreport','BusInsiderSG',
         // Re-posters or ranters
         'websterlkc',
     ],
@@ -166,7 +166,8 @@ var MRTOK = MRTOK || {
                 'causes','I\'m at','posted from','yahoo','ChannelNewsAsia',
                 'any (train )?delay','delay(ed)?\\?$','yesterday','ytd',
                 'i hope','hopefully','heng','hope no','diverted','back to normal',
-                'skip \\w+ bus stop','operating as usual',
+                'skip \\w+ bus stop','operating as usual','expect delays',
+                '(this|next) (sun|mon|tue|wed|thurs|fri|sat|week)',
                 //'cleared','resumed',
             ];
             return str.match(new RegExp('(' + bannedKeywords.join('|') + ')', 'i')) !== null;
@@ -260,7 +261,11 @@ var MRTOK = MRTOK || {
                 .replace(/#?YCK\b/gi, 'Yio Chu Kang')
                 .replace(/#?CCK\b/gi, 'Choa Chu Kang')
                 .replace(/#?TPY\b/gi, 'Toa Payoh')
+                .replace(/#?LTI\b/gi, 'Little India')
+                .replace(/#?OTP\b/gi, 'Outram Park')
+                .replace(/#?PTP\b/gi, 'Potong Pasir')
                 .replace(/#?JE\b/gi, 'Jurong East')
+                .replace(/\bOutram( Park)?\s/gi, 'Outram Park ')
                 .replace(/\bbk?t\.?\sp/gi, 'Bukit P')
                 .replace(/\bpjg/gi, 'Panjang')
                 .replace(/\bbk?t\.?\sb/gi, 'Bukit B');
@@ -276,6 +281,14 @@ var MRTOK = MRTOK || {
                     str = str.replace(new RegExp('(?<!\>)#?' + regstr, 'gi'), '<span data-station>'+station+'</span>');
                 }
             });
+            
+            // Remove duplicate stations
+            str = $('<span>').html(str);
+            str.find('span[data-station]').filter(function() {
+                return this.nextSibling.nodeValue === ' ' && this.innerText === this.nextSibling.nextSibling.innerText;
+            }).remove();
+            str = str.html();
+            
             return str;
         },
         
@@ -301,6 +314,8 @@ var MRTOK = MRTOK || {
                 .replace(/\bn\b/gi, 'and')
                 .replace(/\ba(bit|lot)\b/gi, 'a $1')
                 .replace(/\bmth\b/gi, 'month')
+                .replace(/\byr\b/gi, 'your')
+                .replace(/\bbth\b/gi, 'both')
                 .replace(/\s@\s/g, ' at ');
         },
         
@@ -311,9 +326,11 @@ var MRTOK = MRTOK || {
             str = MRTOK.helpers.capitalizeLinesAndStations(str);
             str = MRTOK.helpers.humanizeText(str);
             return str
-                .replace(/\s?(@[^\s]+\s*)+\b/g, '') // @ mentions
-                .replace(/#\w+\b/g, '') // all # tags 
+                .replace(/@[^\s]+\s*/g, '') // @ mentions
+                .replace(/#(\w*[0-9a-zA-Z]+\w*[0-9a-zA-Z])\s?/g, '') // # tags
+                .replace(/[”"]/g, '') // remove quotes
                 .replace(/As (reported|posted|seen) on (FB|facebook)[.,\s]+/i, '')
+                .replace(/\s+we are sorry.?$/i, '')
                 .replace(/\b(?:https?|ftp):\/\/[\n\S]+\b/gi, '') // urls
                 .replace(/\b(shit|fu?c?k(ed|ing)?|cc?b|chee\sb(ye|ai)|lj|smlj|nabei|nb|wtf)/gi, '****') // profanities
                 .replace(/([\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2694-\u2697]|\uD83E[\uDD10-\uDD5D])/g, '') // emojis
