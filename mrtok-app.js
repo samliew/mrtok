@@ -3,7 +3,7 @@
  *
  * @author   Samuel Liew <samliew@gmail.com>
  * @license  MIT license
- * @version  1.0.0
+ * @version  1.1
  * @link     https://github.com/samliew/mrtok
  */
 
@@ -68,7 +68,7 @@ var MRTOK = MRTOK || {
         'SingaporeNewsSG','sgpressrelease','CoconutsSG','sgpElections',
         'singaporeinform','majulahreport','BusInsiderSG',
         // Re-posters or ranters
-        'websterlkc',
+        'websterlkc','contrabandkarma','xlcliangx',
     ],
     
     // Reasons why a post would fail validation
@@ -89,6 +89,9 @@ var MRTOK = MRTOK || {
         'NEL':['HarbourFront','Outram Park','Chinatown','Clarke Quay','Dhoby Ghaut','Little India','Farrer Park','Boon Keng','Potong Pasir','Woodleigh','Serangoon','Kovan','Hougang','Buangkok','Sengkang','Punggol','Punggol Coast'], // NEL
         'DTL':['Bukit Panjang','Cashew','Hillview','Beauty World','King Albert Park','Sixth Avenue','Tan Kah Kee','Botanic Gardens','Stevens','Newton','Little India','Rochor','Bugis','Promenade','Bayfront','Downtown','Telok Ayer','Chinatown','Fort Canning','Bencoolen','Jalan Besar','Bendemeer','Geylang Bahru','Mattar','MacPherson','Ubi','Kaki Bukit','Bedok North','Bedok Reservoir','Tampines West','Tampines','Tampines East','Upper Changi','Expo','Xilin','Sungei Bedok'], // DTL
         //'TEL':['Woodlands North','Woodlands','Woodlands South','Springleaf','Lentor','Mayflower','Bright Hill','Upper Thomson','Caldecott','Mount Pleasant','Stevens','Napier','Orchard Boulevard','Orchard','Great World','Havelock','Outram Park','Maxwell','Shenton Way','Marina Bay','Marina South','Gardens by the Bay','Tanjong Rhu','Katong Park','Tanjong Katong','Marine Parade','Marine Terrace','Siglap','Bayshore','Bedok South','Sungei Bedok'], // TEL
+        'BPLRT':['Choa Chu Kang','South View','Keat Hong','Teck Whye','Phoenix','Bukit Panjang','Petir','Pending','Bangkit','Fajar','Segar','Jelapang','Senja','Ten Mile Junction'], // BPLRT
+        'SKLRT':['Sengkang','Compassvale','Rumbia','Bakau','Kangkar','Ranggung','Cheng Lim','Farmway','Kupang','Thanggam','Fernvale','Layar','Tongkang','Renjong'], // SKLRT
+        'PGLRT':['Punggol','Cove','Meridian','Coral Edge','Riviera','Kadaloor','Oasis','Damai','Sam Kee','Teck Lee','Punggol Point','Samudera','Nibong','Sumang','Soo Teck'], // PGLRT
     },
     
     
@@ -168,6 +171,7 @@ var MRTOK = MRTOK || {
                 'i hope','hopefully','heng','hope no','diverted','back to normal',
                 'skip \\w+ bus stop','operating as usual','expect delays',
                 '(this|next) (sun|mon|tue|wed|thurs|fri|sat|week)',
+                'some[a-zA-Z\\s]+expect',
                 //'cleared','resumed',
             ];
             return str.match(new RegExp('(' + bannedKeywords.join('|') + ')', 'i')) !== null;
@@ -278,14 +282,14 @@ var MRTOK = MRTOK || {
                 var stations = MRTOK.lineStationsMap[lineCode];
                 for (var station of stations) {
                     var regstr = station.replace(/\s/g, '\\\s?');
-                    str = str.replace(new RegExp('(?<!\>)#?' + regstr, 'gi'), '<span data-station>'+station+'</span>');
+                    str = str.replace(new RegExp('(?<!\>)#?' + regstr, 'gi'), '<span data-station>'+station+'</span> ');
                 }
             });
             
             // Remove duplicate stations
             str = $('<span>').html(str);
             str.find('span[data-station]').filter(function() {
-                return this.nextSibling.nodeValue === ' ' && this.innerText === this.nextSibling.nextSibling.innerText;
+                return this.nextSibling.nodeValue === ' ' && this.nextSibling.nextSibling && this.innerText === this.nextSibling.nextSibling.innerText;
             }).remove();
             str = str.html();
             
@@ -494,7 +498,7 @@ var MRTOK = MRTOK || {
                             postErrors.push('[TWITTER] ' + MRTOK.errorReasons.bannedGeneral, post.user.screen_name, post);
                         }
                         if(t.match(/(delay|fault|breakdown|no\s(train\s)?service)/) === null || // require any keywords
-                           t.match(/(who|what|where|when|why|might|is there)\b/) !== null // no questions
+                           t.match(/(who|what|where|when|might|is there)\b/) !== null // no questions
                         ) {
                             postErrors.push('[TWITTER] ' + MRTOK.errorReasons.noKeywords, post);
                         }
