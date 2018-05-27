@@ -3,7 +3,7 @@
  *
  * @author   Samuel Liew <samliew@gmail.com>
  * @license  MIT license
- * @version  1.1
+ * @version  1.2
  * @link     https://github.com/samliew/mrtok
  */
 
@@ -68,7 +68,7 @@ var MRTOK = MRTOK || {
         'SingaporeNewsSG','sgpressrelease','CoconutsSG','sgpElections',
         'singaporeinform','majulahreport','BusInsiderSG',
         // Re-posters or ranters
-        'websterlkc','contrabandkarma','xlcliangx',
+        'websterlkc','contrabandkarma','xlcliangx','sg_beaglekk',
     ],
     
     // Reasons why a post would fail validation
@@ -171,7 +171,8 @@ var MRTOK = MRTOK || {
                 'i hope','hopefully','heng','hope no','diverted','back to normal',
                 'skip \\w+ bus stop','operating as usual','expect delays',
                 '(this|next) (sun|mon|tue|wed|thurs|fri|sat|week)',
-                'some[a-zA-Z\\s]+expect',
+                'some[a-zA-Z\\s]+expect','trading','stock','poll','opinion',
+                'article','lost','found','do you think', 'should',
                 //'cleared','resumed',
             ];
             return str.match(new RegExp('(' + bannedKeywords.join('|') + ')', 'i')) !== null;
@@ -282,7 +283,7 @@ var MRTOK = MRTOK || {
                 var stations = MRTOK.lineStationsMap[lineCode];
                 for (var station of stations) {
                     var regstr = station.replace(/\s/g, '\\\s?');
-                    str = str.replace(new RegExp('(?<!\>)#?' + regstr, 'gi'), '<span data-station>'+station+'</span> ');
+                    str = str.replace(new RegExp('(?<!\>)#?' + regstr + '\\b', 'gi'), '<span data-station>'+station+'</span> ');
                 }
             });
             
@@ -427,10 +428,10 @@ var MRTOK = MRTOK || {
                         ) {
                             postErrors.push('[REDDIT] ' + MRTOK.errorReasons.noKeywords, post);
                         }
-                        if(MRTOK.validators.hasBannedKeywords(postTitle)) {
+                        var text = post.title + ' ' + post.selftext;
+                        if(MRTOK.validators.hasBannedKeywords(text)) {
                             postErrors.push('[REDDIT] ' + MRTOK.errorReasons.invalidKeywords, post);
                         }
-                        var text = post.title + ' ' + post.selftext;
                         var postTags = MRTOK.helpers.matchTags(text) || MRTOK.helpers.mapToLines(text);
                         if(!postTags || postTags.length > 2) { // no lines or too many
                             postErrors.push('[REDDIT] ' + MRTOK.errorReasons.noTags, post);
@@ -498,7 +499,7 @@ var MRTOK = MRTOK || {
                             postErrors.push('[TWITTER] ' + MRTOK.errorReasons.bannedGeneral, post.user.screen_name, post);
                         }
                         if(t.match(/(delay|fault|breakdown|no\s(train\s)?service)/) === null || // require any keywords
-                           t.match(/(who|what|where|when|might|is there)\b/) !== null // no questions
+                           t.match(/(might|is there)\b/) !== null // no questions
                         ) {
                             postErrors.push('[TWITTER] ' + MRTOK.errorReasons.noKeywords, post);
                         }
