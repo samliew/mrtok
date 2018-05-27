@@ -9,10 +9,6 @@
 
 /* global Image, location, jQuery, $, moment, navigator */
 
-// Check jQuery dependancy
-if(typeof jQuery === 'undefined') console.error('MRTOK.Main - jQuery not found');
-
-// Singleton app
 var MRTOK = MRTOK || {
     
     initialised: false,
@@ -819,4 +815,12 @@ var MRTOK = MRTOK || {
         return this;
     }
 };
-MRTOK.init();
+
+
+// Check jQuery dependancy
+if(typeof jQuery === 'undefined') {
+    console.error('MRTOK.Main - jQuery not found');
+}
+else {
+    MRTOK.init();
+}
