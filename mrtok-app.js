@@ -3,7 +3,7 @@
  *
  * @author   Samuel Liew <samliew@gmail.com>
  * @license  MIT license
- * @version  1.2
+ * @version  1.3
  * @link     https://github.com/samliew/mrtok
  */
 
@@ -13,7 +13,7 @@ var MRTOK = MRTOK || {
     
     initialised: false,
     environment: 'development',
-    ajaxErrors: 0,
+    ajaxErrors: [],
     rResults: {},
     tResults: {},
     rResultsDev: {},
@@ -279,7 +279,7 @@ var MRTOK = MRTOK || {
                 var stations = MRTOK.lineStationsMap[lineCode];
                 for (var station of stations) {
                     var regstr = station.replace(/\s/g, '\\\s?');
-                    str = str.replace(new RegExp('(?<!\>)#?' + regstr + '\\b', 'gi'), '<span data-station>'+station+'</span> ');
+                    str = str.replace(new RegExp('(?<!\>)#?' + regstr + '\\b([.,!?])?', 'gi'), '<span data-station>'+station+'</span>$1 ');
                 }
             });
             
@@ -323,7 +323,8 @@ var MRTOK = MRTOK || {
         sanitizeText: function(str) {
             var UC = function(v) { return v.toUpperCase(); };
             
-            str = MRTOK.helpers.noShouting(str);
+            str = str.toLowerCase().replace(/[\r\n]+/g, ', '); // lowercase, newlines to commas
+            //str = MRTOK.helpers.noShouting(str);
             str = MRTOK.helpers.capitalizeLinesAndStations(str);
             str = MRTOK.helpers.humanizeText(str);
             return str
@@ -606,8 +607,8 @@ var MRTOK = MRTOK || {
     
     handleErrors: function() {
         
-        $(document).ajaxError(function(evt) {
-            MRTOK.ajaxErrors++;
+        $(document).ajaxError(function(evt, jqXHR, settings, errorMsg) {
+            MRTOK.ajaxErrors.push(settings.url);
         });
     },
     
@@ -623,12 +624,17 @@ var MRTOK = MRTOK || {
 
             var numRedditResults = Object.keys(MRTOK.rResults).length;
             var numTwitterResults = Object.keys(MRTOK.tResults).length;
+            var redditErrors = MRTOK.ajaxErrors.filter(v => v.indexOf('reddit.com') >= 0).length;
             console.log('Items that passed validation:', MRTOK.rResults, MRTOK.tResults);
             
             if((MRTOK.news.isEnabled && MRTOK.news.isDelayed) || numRedditResults > 0 || numTwitterResults > 0) {
             	STATE = MRTOK.states.no;
             }
-            else if(MRTOK.ajaxErrors === 0) {
+            else if(MRTOK.ajaxErrors.length === 0) {
+            	STATE = MRTOK.states.yes;
+            }
+            else if(MRTOK.ajaxErrors.length === redditErrors) {
+                // If all ajax errors are caused by reddit, ignore
             	STATE = MRTOK.states.yes;
             }
             // else default to maybe/unknown
