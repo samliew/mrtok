@@ -3,7 +3,7 @@
  *
  * @author   Samuel Liew <samliew@gmail.com>
  * @license  MIT license
- * @version  1.3
+ * @version  1.3.1
  * @link     https://github.com/samliew/mrtok
  */
 
@@ -28,22 +28,28 @@ var MRTOK = MRTOK || {
     
     news: {
         isEnabled: false,
+        useCustomCss: false,
         enabledUntil: moment.tz('2017-07-19 00:00', 'Asia/Singapore'),
         isDelayed: false, // master delay override
         bodyText: '',
         linkText: '', // null or empty for default text
         linkUrl: '', // null or empty to hide button
         bgcolor: null, // null or empty for default gray
-        /* 
-            Possible background colours suitable with white text
-            #1976d2 - blue
-            #d32f2f - red
-            #2e7d32 - green
-            #4e342e - brown
-            #000000 - black
-            null    - gray
-        */
     },
+    /* 
+        Possible background colours suitable with white text
+        #1976d2 - blue
+        #d32f2f - red
+        #2e7d32 - green
+        #4e342e - brown
+        #000000 - black
+        null    - gray
+    */
+    
+    customCss: `
+        .section.header { background-image: url('https://mothership.sg/canornot/img/uploads/images/000/001/041/original/spore%20flag.jpg'); }
+        .msg-tagline { display: none; }
+    `, // end custom css
     
     // For use when official Tweets span full/multiple days
     pinnedTweetIds: [],
@@ -69,6 +75,7 @@ var MRTOK = MRTOK || {
     
     // Reasons why a post would fail validation
     errorReasons: {
+        isRetweet: 'Post is a retweet',
         bannedGeneral: 'Account banned for not providing real-time unique reports',
         bannedReshare: 'Account banned for resharing without adding value',
         bannedRant: 'Account banned for ranting and not actually reporting incidents',
@@ -486,6 +493,9 @@ var MRTOK = MRTOK || {
                         ) {
                             return;
                         }
+                        if(post.retweet_count > 0) { // no reposts
+                            postErrors.push('[TWITTER] ' + MRTOK.errorReasons.retweet, post.retweet_count, post);
+                        }
                         if(post.source.indexOf('ifttt') >= 0 || post.source.indexOf('facebook') >= 0) { // no reposts
                             postErrors.push('[TWITTER] ' + MRTOK.errorReasons.bannedDomain, post.source, post);
                         }
@@ -552,6 +562,9 @@ var MRTOK = MRTOK || {
                        !postDate.isAfter(MRTOK.settings.officialHrsAgo) // ignore if outdated
                     ) {
                         return;
+                    }
+                    if(post.retweet_count > 0) { // no reposts
+                        postErrors.push('[OFFICIAL] ' + MRTOK.errorReasons.isRetweet, post.retweet_count, post);
                     }
                     if(t.match(/(nsl|ewl|nel|dtl|ccl|tel|jtl|crl|lrt)/) === null) { // require any keywords
                         postErrors.push('[OFFICIAL] ' + MRTOK.errorReasons.noKeywords, post);
@@ -742,7 +755,10 @@ var MRTOK = MRTOK || {
         var news = MRTOK.news;
         
         // If not enabled or has expired, do nothing
-        if(moment.isMoment(news.enabledUntil) && moment().isAfter(news.enabledUntil)) news.isEnabled = false;
+        if(moment.isMoment(news.enabledFrom) && moment.isMoment(news.enabledUntil) && (moment().isBefore(news.enabledFrom) || moment().isAfter(news.enabledUntil)))
+        {
+            news.isEnabled = false;
+        }
         if(!news.isEnabled) return;
         
         // Display news
@@ -756,6 +772,11 @@ var MRTOK = MRTOK || {
         }
         $('#news-text').html(news.bodyText);
         $('#news-bar').css('background-color', news.bgcolor).show();
+        
+        // Display custom css
+        if(news.useCustomCss) {
+            $('body').append('<style>' + MRTOK.customCss + '</style>');
+        }
         
         console.log('Current time is ' + moment().format() + '. Displaying news until ' + news.enabledUntil.format() + '.');
     },
@@ -793,6 +814,7 @@ var MRTOK = MRTOK || {
             MRTOK.environment = 'testing';
             MRTOK.settings.nHrsAgo = moment().subtract(1, 'year');
             MRTOK.settings.officialHrsAgo = moment().subtract(1, 'year');
+            $('body').append('<style>' + this.customCss + '</style>');
         }
         if(location.href.indexOf('test-error') > -1) {
             MRTOK.environment = 'testing-ajax-error';
